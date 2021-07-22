@@ -1,6 +1,6 @@
 import django_filters as filters
 
-from .models import Recipe
+from .models import Recipe, Ingredient
 
 
 class RecipeFilter(filters.FilterSet):
@@ -9,18 +9,16 @@ class RecipeFilter(filters.FilterSet):
         field_name="author__slug",
         method='filter_author'
     )
-    is_favorited = filters.CharFilter(
-        field_name="is_favorited__slug",
-        method='filter_is_favorited'
+    is_favorited = filters.BooleanFilter(
+        method='get_is_favorited'
     )
     is_in_shopping_cart = filters.CharFilter(
-        field_name="is_in_shopping_cart__slug",
-        method='filter_is_in_shopping_cart'
+        method='get_is_in_shopping_cart'
     )
 
     class Meta:
         model = Recipe
-        fields = ['tags', 'author', 'is_favorited', 'is_in_shopping_cart']
+        fields = ('tags', 'author', 'is_favorited', 'is_in_shopping_cart')
 
     def filter_tags(self, queryset, name, tags):
         return queryset.filter(tags__slug__in=tags.split(','))
@@ -28,10 +26,22 @@ class RecipeFilter(filters.FilterSet):
     def filter_author(self, queryset, name, author):
         return queryset.filter(author__slug__in=author.split(','))
 
-    def filter_is_favorited(self, queryset, name, is_favorited):
-        return queryset.filter(is_favorited__slug__in=is_favorited.split(','))
+    def get_is_favorited(self, queryset, name, value):
+        user = self.request.user
+        if value:
+            return Recipe.objects.filter(favorites__user=user)
+        return Recipe.objects.all()
 
-    def filter_is_in_shopping_cart(self, queryset, name, is_in_shopping_cart):
-        return queryset.filter(
-            is_in_shopping_cart__slug__in=is_in_shopping_cart.split(',')
-        )
+    def get_is_in_shopping_cart(self, queryset, name, value):
+        user = self.request.username
+        if value:
+            return Recipe.objects.filter(user_shopping_lists__user=user)
+        return Recipe.objects.all()
+
+
+class IngredientFilter(filters.FilterSet):
+    name = filters.CharFilter(field_name="name", lookup_expr='icontains')
+
+    class Meta:
+        model = Ingredient
+        fields = ('name', )

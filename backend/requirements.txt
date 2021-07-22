@@ -35,6 +35,7 @@ sqlparse==0.4.1
 uritemplate==3.0.1
 urllib3==1.26.6
 webcolors==1.11.1
+drf_extra_fields==3.1.1
 django-filter
 gunicorn
 psycopg2

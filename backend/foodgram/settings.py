@@ -123,6 +123,8 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 6
 }
 
+RECIPES_LIMIT = 3
+
 DJOSER = {
     'PASSWORD_RESET_CONFIRM_URL': '#/password/reset/confirm/{uid}/{token}',
     'USERNAME_RESET_CONFIRM_URL': '#/username/reset/confirm/{uid}/{token}',

@@ -1,10 +1,13 @@
 from django.contrib import admin
 
-from .models import Favorite, Follow, Ingredient, Recipe, ShoppingList, Tag
+from .models import (Favorite, Follow, Ingredient, IngredientAmount, Recipe,
+                     ShoppingList, Tag)
 
 
 class TagAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'color', 'slug')
+    search_fields = ('name',)
+    list_filter = ('name', 'slug')
     empty_value_display = '-пусто-'
 
 
@@ -12,10 +15,19 @@ class IngredientAdmin(admin.ModelAdmin):
     list_display = (
         'id',
         'name',
-        'amount',
         'measurement_unit'
     )
     search_fields = ('name',)
+    empty_value_display = '-пусто-'
+
+
+class IngredientAmountAdmin(admin.ModelAdmin):
+    list_display = (
+        'id',
+        'ingredient',
+        'recipe',
+        'amount'
+    )
     empty_value_display = '-пусто-'
 
 
@@ -30,20 +42,19 @@ class RecipeAdmin(admin.ModelAdmin):
         'name',
         'image',
         'text',
+        'is_favorited',
         'ingredients',
-        'is_favorited_count',
     )
+    search_fields = ('author', 'name')
+    list_filter = ('author', 'name', 'tags')
+    empty_value_display = '-пусто-'
 
-    def is_favorited_count(self, obj):
-        return obj.is_favorited.all().count()
-    is_favorited_count.short_description = 'Количество сохранений'
+    def is_favorited(self, obj):
+        return obj.favorite.count()
 
     def ingredients(self, obj):
         return list(obj.ingredient.all())
     ingredients.short_description = 'Ингредиенты'
-
-    search_fields = ('name', 'author__username',)
-    empty_value_display = '-пусто-'
 
 
 class FavoriteAdmin(admin.ModelAdmin):
@@ -68,7 +79,7 @@ class ShoppingListAdmin(admin.ModelAdmin):
     list_display = (
         'id',
         'user',
-        'purchase',
+        'recipe',
     )
     empty_value_display = '-пусто-'
 
@@ -79,3 +90,4 @@ admin.site.register(Tag, TagAdmin)
 admin.site.register(Follow, FollowAdmin)
 admin.site.register(ShoppingList, ShoppingListAdmin)
 admin.site.register(Favorite, FavoriteAdmin)
+admin.site.register(IngredientAmount, IngredientAmountAdmin)

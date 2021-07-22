@@ -4,35 +4,52 @@ from .models import CustomUser
 
 
 class UserSerializer(serializers.ModelSerializer):
+    is_subscribed = serializers.SerializerMethodField(
+        method_name='get_is_subscribed'
+    )
+
     class Meta:
         model = CustomUser
         fields = (
             'id',
             'email',
-            'id',
+            'is_subscribed',
             'username',
             'first_name',
             'last_name',
         )
 
+    def get_is_subscribed(self, obj):
+        user = self.context.get('request').user
+        return user.following.filter(author=obj).exists()
 
-class ChangePasswordSerializer(serializers.ModelSerializer):
-    model = CustomUser
+
+class ChangePasswordSerializer(serializers.Serializer):
     old_pass = serializers.CharField(required=True)
     new_pass = serializers.CharField(required=True)
     new_pass_repeat = serializers.CharField(required=True)
 
-    class Meta:
-        model = CustomUser
-        fields = ('old_pass', 'new_pass', 'new_pass_repeat')
+    def validate(self, data):
+        if not self.context['request'].user.check_password(
+            data.get('old_pass')
+        ):
+            raise serializers.ValidationError(
+                {'old_pass': 'Неверный пароль.'}
+            )
 
-    # def validate(self, data):
-    #     password = data.get('new_password')
-    #     errors = dict()
-    #     try:
-    #         validators.validate_password(password=password)
-    #     except exceptions.ValidationError as e:
-    #         errors['new_password'] = list(e.messages)
-    #     if errors:
-    #         raise serializers.ValidationError(errors)
-    #     return super(ChangePasswordSerializer, self).validate(data)
+        if data.get('new_pass') == data.get('old_pass'):
+            raise serializers.ValidationError(
+                {'new_pass': 'Новый пароль идентичен старому.'}
+            )
+
+        if data.get('new_pass_repeat') != data.get('new_pass'):
+            raise serializers.ValidationError(
+                {'new_pass': 'Пароли не совпадают.'}
+            )
+
+        return data
+
+    def update(self, instance, validated_data):
+        instance.set_password(validated_data['new_pass'])
+        instance.save()
+        return instance
