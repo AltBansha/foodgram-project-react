@@ -1,7 +1,8 @@
+from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-from users.models import CustomUser
+User = get_user_model()
 
 
 class Tag(models.Model):
@@ -11,7 +12,8 @@ class Tag(models.Model):
         unique=True
     )
     color = models.CharField(
-        max_length=200,
+        max_length=7,
+        default='#ffffff',
         unique=True
     )
     slug = models.SlugField(
@@ -55,7 +57,7 @@ class Recipe(models.Model):
         verbose_name='Тег',
     )
     author = models.ForeignKey(
-        CustomUser,
+        User,
         on_delete=models.CASCADE,
         related_name='recipes',
         verbose_name='Автор рецепта',
@@ -101,12 +103,14 @@ class IngredientAmount(models.Model):
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
-        verbose_name='Ингредиент в рецепте'
+        verbose_name='Ингредиент в рецепте',
+        related_name='ingredient_in_recipe'
     )
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        verbose_name='Рецепт'
+        verbose_name='Рецепт',
+        related_name='recipe'
     )
     amount = models.PositiveSmallIntegerField(
         verbose_name='Количество ингредиентов',
@@ -124,7 +128,7 @@ class IngredientAmount(models.Model):
 
 class Favorite(models.Model):
     user = models.ForeignKey(
-        CustomUser,
+        User,
         on_delete=models.CASCADE,
         related_name='favorites',
     )
@@ -149,35 +153,9 @@ class Favorite(models.Model):
                 f'избранные рецепты: {self.recipe.name}')
 
 
-class Follow(models.Model):
-    user = models.ForeignKey(
-        CustomUser,
-        on_delete=models.CASCADE,
-        related_name='follower',
-        verbose_name='Подписчик'
-    )
-    author = models.ForeignKey(
-        CustomUser,
-        on_delete=models.CASCADE,
-        related_name='following',
-        verbose_name='Автор'
-    )
-
-    class Meta:
-        verbose_name = 'Подписка'
-        verbose_name_plural = 'Подписки'
-        constraints = [
-            models.UniqueConstraint(fields=['user', 'author'],
-                                    name='unique_follow')
-            ]
-
-    def __str__(self):
-        return f'{self.user} => {self.author}'
-
-
 class ShoppingList(models.Model):
     user = models.ForeignKey(
-        CustomUser,
+        User,
         related_name='user_shopping_lists',
         on_delete=models.CASCADE,
         verbose_name='Пользователь'
