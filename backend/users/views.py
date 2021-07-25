@@ -7,9 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from recipes.permissions import IsAdminOrSuperUser
-
 from .models import Follow
-# from .models import CustomUser
 from .serializers import (ChangePasswordSerializer, FollowSerializer,
                           ShowFollowersSerializer, UserSerializer)
 
@@ -18,7 +16,6 @@ User = get_user_model()
 
 class ChangePasswordView(UpdateAPIView):
     serializer_class = ChangePasswordSerializer
-    model = User
     permission_classes = [IsAuthenticated, IsAdminOrSuperUser]
 
     def get_object(self, queryset=None):
@@ -74,8 +71,7 @@ class FollowAPIView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class ListFollowViewSet(generics.ListAPIView):
-    queryset = User.objects.all()
+class ListFollowView(generics.ListAPIView):
     permission_classes = [IsAuthenticated, ]
     serializer_class = ShowFollowersSerializer
 

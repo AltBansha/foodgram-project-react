@@ -104,13 +104,13 @@ class IngredientAmount(models.Model):
         Ingredient,
         on_delete=models.CASCADE,
         verbose_name='Ингредиент в рецепте',
-        related_name='ingredient_in_recipe'
+        related_name='ingredients_in_recipe'
     )
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
         verbose_name='Рецепт',
-        related_name='recipe'
+        related_name='recipes'
     )
     amount = models.PositiveSmallIntegerField(
         verbose_name='Количество ингредиентов',
@@ -135,14 +135,15 @@ class Favorite(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        related_name='favorite',
+        related_name='favorites',
     )
     when_added = models.DateTimeField(
         auto_now_add=True, verbose_name='Дата добавления'
     )
 
     class Meta:
-        verbose_name_plural = 'Избранное'
+        verbose_name = 'Избранный'
+        verbose_name_plural = 'Избранные'
         constraints = [
             models.UniqueConstraint(fields=['user', 'recipe'],
                                     name='unique_favorites_recipes')
@@ -162,7 +163,7 @@ class ShoppingList(models.Model):
     )
     recipe = models.ForeignKey(
         Recipe,
-        related_name='purchase',
+        related_name='purchases',
         on_delete=models.CASCADE,
         verbose_name='Покупка'
     )

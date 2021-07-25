@@ -50,10 +50,10 @@ class RecipeAdmin(admin.ModelAdmin):
     empty_value_display = '-пусто-'
 
     def is_favorited(self, obj):
-        return obj.favorite.count()
+        return obj.favorites.count()
 
     def ingredients(self, obj):
-        return list(obj.ingredient.all())
+        return list(obj.ingredients.all())
     ingredients.short_description = 'Ингредиенты'
 
 

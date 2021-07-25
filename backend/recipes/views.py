@@ -74,7 +74,7 @@ class RecipeViewSet(ModelViewSet):
         return context
 
 
-class FavoriteViewSet(APIView):
+class FavoriteAPIView(APIView):
     permission_classes = [IsAuthenticated, ]
 
     def get(self, request, recipe_id):
@@ -97,15 +97,13 @@ class FavoriteViewSet(APIView):
     def delete(self, request, recipe_id):
         user = request.user
         recipe = get_object_or_404(Recipe, id=recipe_id)
-        deleted_obj = Favorite.objects.filter(user=user,
-                                              recipe=recipe).delete()
-        if deleted_obj[0] == 0:
+        count_of_deleted, _ = Favorite.objects.filter(user=user,
+                                                      recipe=recipe).delete()
+        if count_of_deleted == 0:
             return Response(
                 'Такого рецепта нет в избранном.',
                 status=status.HTTP_400_BAD_REQUEST
             )
-        return Response(status=status.HTTP_204_NO_CONTENT)
-        Favorite.objects.get(user=user, recipe=recipe).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -131,15 +129,15 @@ class ShoppingVeiwSet(APIView):
     def delete(self, request, recipe_id):
         user = request.user
         recipe = get_object_or_404(Recipe, id=recipe_id)
-        deleted_obj = ShoppingList.objects.filter(user=user,
-                                                  recipe=recipe).delete()
-        if deleted_obj[0] == 0:
+        count_of_deleted, _ = ShoppingList.objects.filter(
+            user=user,
+            recipe=recipe
+        ).delete()
+        if count_of_deleted == 0:
             return Response(
                 'Такого рецепта в списке покупок нет.',
                 status=status.HTTP_400_BAD_REQUEST
             )
-        return Response(status=status.HTTP_204_NO_CONTENT)
-        ShoppingList.objects.get(user=user, recipe=recipe).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -147,28 +145,29 @@ class DownloadShoppingCart(APIView):
     permission_classes = [IsAuthenticated, ]
 
     def get(self, request):
-        user = request.user
-        users_shopping_list_recipes = user.user_shopping_lists.all()
         shopping_list = {}
-        for record in users_shopping_list_recipes:
-            recipe = record.recipe
-            ingredients = IngredientAmount.objects.filter(recipe=recipe)
-            for ingredient in ingredients:
-                amount = ingredient.amount
-                name = ingredient.ingredient.name
-                measurement_unit = ingredient.ingredient.measurement_unit
-                if name not in shopping_list:
-                    shopping_list[name] = {
-                        'measurement_unit': measurement_unit,
-                        'amount': amount
-                    }
-                else:
-                    shopping_list[name]['amount'] += amount
-        wishlist = ([f"{item} - {shopping_list[item]['amount']} "
-                     f"{shopping_list[item]['measurement_unit']} \n "
-                     for item in shopping_list])
+        ingredients = IngredientAmount.objects.filter(
+            recipe__purchases__user=request.user
+        )
+        for ingredient in ingredients:
+            amount = ingredient.amount
+            name = ingredient.ingredient.name
+            measurement_unit = ingredient.ingredient.measurement_unit
+            if name not in shopping_list:
+                shopping_list[name] = {
+                    'measurement_unit': measurement_unit,
+                    'amount': amount
+                }
+            else:
+                shopping_list[name]['amount'] += amount
+        wishlist = ([f" {item} - {value['amount']} "
+                     f"{value['measurement_unit']} \n"
+                     for item, value in shopping_list.items()])
+        # wishlist = ([f"{item} - {shopping_list[item]['amount']} "
+        #              f"{shopping_list[item]['measurement_unit']} \n "
+        #              for item in shopping_list])
         wishlist.append('\n')
-        wishlist.append('FoodGram, 2021')
+        wishlist.append('\n FoodGram, 2021')
         response = HttpResponse(wishlist, 'Content-Type: text/plain')
         response['Content-Disposition'] = 'attachment; filename="wishlist.txt"'
         return response
