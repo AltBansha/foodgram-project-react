@@ -1,3 +1,5 @@
+from datetime import date
+
 from django.contrib.auth import get_user_model
 from django.db.models import Exists, OuterRef
 from django.shortcuts import HttpResponse, get_object_or_404
@@ -36,7 +38,6 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class RecipeViewSet(ModelViewSet):
-    queryset = Recipe.objects.all()
     filter_backends = [DjangoFilterBackend, ]
     filter_class = RecipeFilter
 
@@ -163,11 +164,9 @@ class DownloadShoppingCart(APIView):
         wishlist = ([f" {item} - {value['amount']} "
                      f"{value['measurement_unit']} \n"
                      for item, value in shopping_list.items()])
-        # wishlist = ([f"{item} - {shopping_list[item]['amount']} "
-        #              f"{shopping_list[item]['measurement_unit']} \n "
-        #              for item in shopping_list])
         wishlist.append('\n')
-        wishlist.append('\n FoodGram, 2021')
+        today = date.today()
+        wishlist.append(f"\n FoodGram, {today.year}")
         response = HttpResponse(wishlist, 'Content-Type: text/plain')
         response['Content-Disposition'] = 'attachment; filename="wishlist.txt"'
         return response

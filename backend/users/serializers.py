@@ -61,9 +61,9 @@ class ChangePasswordSerializer(serializers.Serializer):
 
 
 class ShowFollowersSerializer(serializers.ModelSerializer):
-    is_subscribed = serializers.SerializerMethodField()
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
+    is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -93,8 +93,6 @@ class ShowFollowersSerializer(serializers.ModelSerializer):
 
 class FollowSerializer(serializers.ModelSerializer):
     queryset = User.objects.all()
-    user = serializers.PrimaryKeyRelatedField(queryset=queryset)
-    author = serializers.PrimaryKeyRelatedField(queryset=queryset)
 
     class Meta:
         model = Follow

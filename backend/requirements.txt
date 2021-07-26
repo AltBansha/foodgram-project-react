@@ -40,3 +40,5 @@ django-filter
 gunicorn
 psycopg2
 python-dotenv
+django_dotenv==1.4.2
+python-dotenv==0.19.0

@@ -2,8 +2,8 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
-from users.serializers import UserSerializer
 
+from users.serializers import UserSerializer
 from .fields import Base64ImageField
 from .models import (Favorite, Ingredient, IngredientAmount, Recipe,
                      ShoppingList, Tag)
@@ -61,24 +61,14 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     def get_ingredients(self, obj):
         recipe = obj
-        qs = recipe.recipes.all()
+        qs = recipe.recipes_ingredients_list.all()
         return IngredientAmountSerializer(qs, many=True).data
-
-    def get_is_favorited(self, obj):
-        request = self.context.get('request')
-        if request is None or request.user.is_anonymous:
-            return False
-        return obj.is_favorited
-
-    def get_is_in_shopping_cart(self, obj):
-        request = self.context.get('request')
-        if request is None or request.user.is_anonymous:
-            return False
-        return obj.is_in_shopping_cart
 
 
 class AddIngredientAmountSerializer(serializers.ModelSerializer):
-    id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
+    id = serializers.PrimaryKeyRelatedField(
+        source='ingredient', queryset=Ingredient.objects.all()
+    )
 
     class Meta:
         model = IngredientAmount
@@ -161,8 +151,6 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
 
 class AddFavouriteRecipeSerializer(serializers.ModelSerializer):
-    recipe = serializers.PrimaryKeyRelatedField(queryset=Recipe.objects.all())
-    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
 
     class Meta:
         model = Favorite
