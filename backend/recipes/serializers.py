@@ -36,12 +36,12 @@ class IngredientAmountSerializer(serializers.ModelSerializer):
         source='ingredient',
         read_only=True,
         slug_field='name'
-     )
+    )
     measurement_unit = serializers.SlugRelatedField(
         source='ingredient',
         read_only=True,
         slug_field='measurement_unit'
-     )
+    )
 
     class Meta:
         model = IngredientAmount
@@ -165,8 +165,8 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         for ingredient_item in ingredients:
             if int(ingredient_item['amount']) <= 0:
                 raise serializers.ValidationError({
-                        'ingredients': ('Убедитесь, что значение количества '
-                                        'ингредиента больше 0.')
+                    'ingredients': ('Убедитесь, что значение количества '
+                                    'ингредиента больше 0.')
                 })
         return data
 
@@ -174,8 +174,8 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         cooking_time = self.initial_data.get('cooking_time')
         if int(cooking_time) <= 0:
             raise serializers.ValidationError(
-                        'Убедитесь, что время '
-                        'приготовления больше 0.'
+                'Убедитесь, что время '
+                'приготовления больше 0.'
             )
 
         return data
