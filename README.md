@@ -13,7 +13,7 @@
 
 1. backend - образ бэка проекта
 2. frontend - образ фронта проекта
-3. postgres - образ базы данных PostgreSQL v 12.04
+3. postgres - образ базы данных PostgreSQL v 13.02
 4. nginx - образ web сервера nginx
 
 ### Клонирование репозитория:
