@@ -22,7 +22,7 @@ https://github.com/AltBansha/foodgram-project-react.git
 
 #### Запуск проекта:
 - Установите Docker
-- Выполнить команду docker pull dockerfirst1/
+- Выполнить команду docker pull dockerfirst1/foodgram
 
 #### Первоначальная настройка Django:
 - docker-compose exec web python manage.py migrate --noinput
