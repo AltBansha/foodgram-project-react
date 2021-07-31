@@ -4,11 +4,13 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 
 from users.serializers import UserSerializer
-from .fields import Base64ImageField
+from drf_extra_fields.fields import Base64ImageField
 from .models import (Favorite, Ingredient, IngredientAmount, Recipe,
                      ShoppingList, Tag)
 
 User = get_user_model()
+
+BASE_URL = 'http://127.0.0.1'
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -50,8 +52,8 @@ class RecipeSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only=True)
     tags = TagSerializer(many=True, read_only=True)
     ingredients = serializers.SerializerMethodField()
-    is_favorited = serializers.BooleanField()
-    is_in_shopping_cart = serializers.BooleanField()
+    is_favorited = serializers.SerializerMethodField()
+    is_in_shopping_cart = serializers.SerializerMethodField()
 
     class Meta:
         model = Recipe
@@ -64,11 +66,26 @@ class RecipeSerializer(serializers.ModelSerializer):
         qs = recipe.recipes_ingredients_list.all()
         return IngredientAmountSerializer(qs, many=True).data
 
+    def get_is_favorited(self, obj):
+        request = self.context.get('request')
+        if request is None or request.user.is_anonymous:
+            return False
+        user = request.user
+        return Favorite.objects.filter(recipe=obj, user=user).exists()
+
+    def get_is_in_shopping_cart(self, obj):
+        request = self.context.get('request')
+        if request is None or request.user.is_anonymous:
+            return False
+        user = request.user
+        return ShoppingList.objects.filter(recipe=obj, user=user).exists()
+
 
 class AddIngredientAmountSerializer(serializers.ModelSerializer):
     id = serializers.PrimaryKeyRelatedField(
         source='ingredient', queryset=Ingredient.objects.all()
     )
+    amount = serializers.IntegerField()
 
     class Meta:
         model = IngredientAmount
@@ -81,7 +98,6 @@ class ShowRecipeAddedSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
         fields = ('id', 'name', 'image', 'cooking_time')
-        read_only_fields = fields
 
     def get_image(self, obj):
         request = self.context.get('request')
@@ -102,16 +118,17 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     tags = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(), many=True
     )
+    cooking_time = serializers.IntegerField()
 
     class Meta:
         model = Recipe
-        fields = ('id', 'tags', 'author', 'ingredients',
-                  'name', 'image', 'text', 'cooking_time')
+        fields = ('id', 'image', 'tags', 'author', 'ingredients',
+                  'name', 'text', 'cooking_time')
 
     def create_bulk_ingredients(self, recipe, ingredients_data):
         IngredientAmount.objects.bulk_create([
             IngredientAmount(
-                ingredient=ingredient['id'],
+                ingredient=ingredient['ingredient'],
                 recipe=recipe,
                 amount=ingredient['amount']
             ) for ingredient in ingredients_data
@@ -130,19 +147,43 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def update(self, instance, validated_data):
-        ingredient_data = validated_data.pop('ingredients')
+        ingredients_data = validated_data.pop('ingredients')
+        tags_data = validated_data.pop('tags')
         IngredientAmount.objects.filter(recipe=instance).delete()
-        self.create_bulk_ingredients(instance, ingredient_data)
+        self.create_bulk_ingredients(instance, ingredients_data)
         instance.name = validated_data.pop('name')
         instance.text = validated_data.pop('text')
-        instance.image = validated_data.pop('image')
+        if validated_data.get('image') is not None:
+            instance.image = validated_data.pop('image')
         instance.cooking_time = validated_data.pop('cooking_time')
         instance.save()
+        instance.tags.set(tags_data)
         return instance
 
+    def validate(self, data):
+        ingredients = self.initial_data.get('ingredients')
+        for ingredient_item in ingredients:
+            if int(ingredient_item['amount']) <= 0:
+                raise serializers.ValidationError({
+                        'ingredients': ('Убедитесь, что значение количества '
+                                        'ингредиента больше 0.')
+                })
+        return data
+
+    def validate_cooking_time(self, data):
+        cooking_time = self.initial_data.get('cooking_time')
+        if int(cooking_time) <= 0:
+            raise serializers.ValidationError(
+                        'Убедитесь, что время '
+                        'приготовления больше 0.'
+            )
+
+        return data
+
     def to_representation(self, instance):
+        user = self.context.get('request').user
         data = RecipeSerializer(
-            instance,
+            Recipe.objects.annotate_user_flags(user).get(pk=instance.pk),
             context={
                 'request': self.context.get('request')
             }
@@ -164,9 +205,12 @@ class AddFavouriteRecipeSerializer(serializers.ModelSerializer):
         ]
 
     def to_representation(self, instance):
+        user = self.context.get('request').user
         request = self.context.get('request')
         return ShowRecipeAddedSerializer(
-            instance.recipe,
+            Recipe.objects.annotate_user_flags(user).get(
+                pk=instance.recipe.pk
+            ),
             context={'request': request}
         ).data
 
@@ -182,3 +226,13 @@ class ShoppingListSerializer(AddFavouriteRecipeSerializer):
                 message=('Вы уже добавили рецепт в список покупок.')
             )
         ]
+
+    def to_representation(self, instance):
+        user = self.context.get('request').user
+        request = self.context.get('request')
+        return ShowRecipeAddedSerializer(
+            Recipe.objects.annotate_user_flags(user).get(
+                pk=instance.recipe.pk
+            ),
+            context={'request': request}
+        ).data

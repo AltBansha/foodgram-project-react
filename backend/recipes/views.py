@@ -1,7 +1,6 @@
 from datetime import date
 
 from django.contrib.auth import get_user_model
-from django.db.models import Exists, OuterRef
 from django.shortcuts import HttpResponse, get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status, viewsets
@@ -13,10 +12,11 @@ from rest_framework.viewsets import ModelViewSet
 from .filters import IngredientFilter, RecipeFilter
 from .models import (Favorite, Ingredient, IngredientAmount, Recipe,
                      ShoppingList, Tag)
+from .paginators import PageNumberPaginatorModified
 from .permissions import IsAdminOrSuperUser, IsAuthorOrReadOnly
-from .serializers import (AddFavouriteRecipeSerializer, IngredientSerializer,
-                          RecipeCreateSerializer, RecipeSerializer,
-                          ShoppingListSerializer, TagSerializer)
+from .serializers import (IngredientSerializer, RecipeCreateSerializer,
+                          RecipeSerializer, ShoppingListSerializer,
+                          AddFavouriteRecipeSerializer, TagSerializer)
 
 User = get_user_model()
 
@@ -40,21 +40,10 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 class RecipeViewSet(ModelViewSet):
     filter_backends = [DjangoFilterBackend, ]
     filter_class = RecipeFilter
+    pagination_class = PageNumberPaginatorModified
 
     def get_queryset(self):
-        user = self.request.user
-        return Recipe.objects.annotate(
-            is_favorited=Exists(
-                Favorite.objects.filter(
-                    user=user, recipe_id=OuterRef('pk')
-                )
-            ),
-            is_in_shopping_cart=Exists(
-                ShoppingList.objects.filter(
-                    user=user, recipe_id=OuterRef('pk')
-                )
-            )
-        )
+        return Recipe.objects.annotate_user_flags(self.request.user)
 
     def get_permissions(self):
         if self.action == 'create':
@@ -64,7 +53,7 @@ class RecipeViewSet(ModelViewSet):
         return AllowAny(),
 
     def get_serializer_class(self):
-        if self.request.method in ('POST', 'PUT'):
+        if self.request.method in ('POST', 'PUT', 'PATCH'):
             return RecipeCreateSerializer
 
         return RecipeSerializer
@@ -98,8 +87,8 @@ class FavoriteAPIView(APIView):
     def delete(self, request, recipe_id):
         user = request.user
         recipe = get_object_or_404(Recipe, id=recipe_id)
-        count_of_deleted, _ = Favorite.objects.filter(user=user,
-                                                      recipe=recipe).delete()
+        count_of_deleted, _ = Favorite.objects.get(user=user,
+                                                   recipe=recipe).delete()
         if count_of_deleted == 0:
             return Response(
                 'Такого рецепта нет в избранном.',
@@ -130,7 +119,7 @@ class ShoppingVeiwSet(APIView):
     def delete(self, request, recipe_id):
         user = request.user
         recipe = get_object_or_404(Recipe, id=recipe_id)
-        count_of_deleted, _ = ShoppingList.objects.filter(
+        count_of_deleted, _ = ShoppingList.objects.get(
             user=user,
             recipe=recipe
         ).delete()

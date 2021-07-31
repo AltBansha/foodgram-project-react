@@ -7,13 +7,16 @@ coreschema==0.0.4
 cryptography==3.4.7
 defusedxml==0.7.1
 Django==3.2.5
+django-dotenv==1.4.2
 django-filter==2.4.0
 django-templated-mail==1.1.1
 djangorestframework==3.12.4
 djangorestframework-simplejwt==4.7.2
 djoser==2.1.0
+drf-extra-fields==3.1.1
 flake8==3.9.2
 idna==2.10
+isort==5.9.2
 itypes==1.2.0
 Jinja2==3.0.1
 MarkupSafe==2.0.1
@@ -24,6 +27,7 @@ pycodestyle==2.7.0
 pycparser==2.20
 pyflakes==2.3.1
 PyJWT==2.1.0
+python-dotenv==0.19.0
 python3-openid==3.2.0
 pytz==2021.1
 requests==2.25.1
@@ -35,10 +39,5 @@ sqlparse==0.4.1
 uritemplate==3.0.1
 urllib3==1.26.6
 webcolors==1.11.1
-drf_extra_fields==3.1.1
-django-filter
-gunicorn
+gunicorn==20.1.0
 psycopg2
-python-dotenv
-django_dotenv==1.4.2
-python-dotenv==0.19.0

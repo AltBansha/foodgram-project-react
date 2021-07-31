@@ -18,7 +18,8 @@ class CustomUser(AbstractUser):
         default=UserRole.USER
     )
 
-    REQUIRED_FIELDS = ['first_name', 'last_name', 'email']
+    REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
+    USERNAME_FIELD = 'email'
 
     class Meta:
         verbose_name = 'Пользователь'

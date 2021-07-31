@@ -4,10 +4,8 @@ from .models import Ingredient, Recipe
 
 
 class RecipeFilter(filters.FilterSet):
-    tags = filters.CharFilter(field_name="tags__slug", method='filter_tags')
-    author = filters.CharFilter(
-        field_name="author__slug",
-        method='filter_author'
+    tags = filters.AllValuesMultipleFilter(
+        field_name='tags__slug'
     )
     is_favorited = filters.BooleanFilter(
         method='get_is_favorited'
@@ -20,12 +18,6 @@ class RecipeFilter(filters.FilterSet):
         model = Recipe
         fields = ('tags', 'author', 'is_favorited', 'is_in_shopping_cart')
 
-    def filter_tags(self, queryset, name, tags):
-        return queryset.filter(tags__slug__in=tags.split(','))
-
-    def filter_author(self, queryset, name, author):
-        return queryset.filter(author__slug__in=author.split(','))
-
     def get_is_favorited(self, queryset, name, value):
         user = self.request.user
         if value:
@@ -33,9 +25,9 @@ class RecipeFilter(filters.FilterSet):
         return Recipe.objects.all()
 
     def get_is_in_shopping_cart(self, queryset, name, value):
-        user = self.request.username
+        user = self.request.user
         if value:
-            return Recipe.objects.filter(user_shopping_lists__user=user)
+            return Recipe.objects.filter(purchases__user=user)
         return Recipe.objects.all()
 
 

@@ -1,40 +1,17 @@
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
-from recipes.permissions import IsAdminOrSuperUser
+# from recipes.permissions import IsAdminOrSuperUser
 from rest_framework import generics, status
-from rest_framework.generics import RetrieveAPIView, UpdateAPIView
+from rest_framework.generics import RetrieveAPIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import Follow
-from .serializers import (ChangePasswordSerializer, FollowSerializer,
-                          ShowFollowersSerializer, UserSerializer)
+from .serializers import (FollowSerializer, ShowFollowersSerializer,
+                          UserSerializer)
 
 User = get_user_model()
-
-
-class ChangePasswordView(UpdateAPIView):
-    serializer_class = ChangePasswordSerializer
-    permission_classes = [IsAuthenticated, IsAdminOrSuperUser]
-
-    def get_object(self, queryset=None):
-        obj = self.request.user
-        return obj
-
-    def update(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-
-        if serializer.is_valid():
-            response = {
-                'status': 'success',
-                'code': status.HTTP_200_OK,
-                'message': 'Пароль успешно изменен.',
-                'data': []
-            }
-            return Response(response)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserView(RetrieveAPIView):
