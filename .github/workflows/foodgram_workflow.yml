@@ -61,8 +61,7 @@ jobs:
           passphrase: ${{ secrets.PASSPHRASE }}
           stack_file_name: docker-compose.yaml
           script: |
-            sudo docker pull dockerfirst1/infra_backend
-            sudo docker pull dockerfirst1/infra_frontend
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/foodgram:latest
             sudo docker-compose stop
             sudo docker-compose rm web
             # Создаст файл для переменных окружения
