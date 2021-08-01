@@ -13,7 +13,7 @@ from .filters import IngredientFilter, RecipeFilter
 from .models import (Favorite, Ingredient, IngredientAmount, Recipe,
                      ShoppingList, Tag)
 from .paginators import PageNumberPaginatorModified
-from .permissions import IsAdminOrSuperUser, IsAuthorOrReadOnly
+from .permissions import AdminOrAuthorOrReadOnly
 from .serializers import (IngredientSerializer, RecipeCreateSerializer,
                           RecipeSerializer, ShoppingListSerializer,
                           AddFavouriteRecipeSerializer, TagSerializer)
@@ -41,17 +41,17 @@ class RecipeViewSet(ModelViewSet):
     filter_backends = [DjangoFilterBackend, ]
     filter_class = RecipeFilter
     pagination_class = PageNumberPaginatorModified
-    permission_classes = [AllowAny, ]
+    permission_classes = [AdminOrAuthorOrReadOnly, ]
 
     def get_queryset(self):
         return Recipe.objects.annotate_user_flags(self.request.user)
 
-    def get_permissions(self):
-        if self.action == 'create':
-            return IsAuthenticated(),
-        if self.action in ['destroy', 'update', 'partial_update']:
-            return IsAuthorOrReadOnly() and IsAdminOrSuperUser(),
-        return AllowAny(),
+    # def get_permissions(self):
+    #     if self.action == 'create':
+    #         return IsAuthenticated(),
+    #     if self.action in ['destroy', 'update', 'partial_update']:
+    #         return IsAuthorOrReadOnly() and IsAdminOrSuperUser(),
+    #     return AllowAny(),
 
     def get_serializer_class(self):
         if self.request.method in ('POST', 'PUT', 'PATCH'):
