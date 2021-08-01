@@ -170,7 +170,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
     def validate_cooking_time(self, data):
         cooking_time = self.initial_data.get('cooking_time')
-        if cooking_time <= 0:
+        if int(cooking_time) <= 0:
             raise serializers.ValidationError(
                 'Убедитесь, что время '
                 'приготовления больше 0.'
