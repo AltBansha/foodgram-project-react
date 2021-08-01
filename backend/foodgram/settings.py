@@ -123,6 +123,7 @@ DJOSER = {
     'SEND_ACTIVATION_EMAIL': False,
     'SERIALIZERS': {},
     'LOGIN_FIELD': 'email',
+    'HIDE_USERS': False,
     'USER_ID_FIELD': 'id',
 }
 
