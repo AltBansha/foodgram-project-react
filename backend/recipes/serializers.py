@@ -179,9 +179,8 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return data
 
     def to_representation(self, instance):
-        user = self.context.get('request').user
         data = RecipeSerializer(
-            Recipe.objects.annotate_user_flags(user).get(pk=instance.pk),
+            instance,
             context={
                 'request': self.context.get('request')
             }
@@ -203,12 +202,9 @@ class AddFavouriteRecipeSerializer(serializers.ModelSerializer):
         ]
 
     def to_representation(self, instance):
-        user = self.context.get('request').user
         request = self.context.get('request')
         return ShowRecipeAddedSerializer(
-            Recipe.objects.annotate_user_flags(user).get(
-                pk=instance.recipe.pk
-            ),
+            instance.recipe,
             context={'request': request}
         ).data
 
@@ -226,11 +222,8 @@ class ShoppingListSerializer(AddFavouriteRecipeSerializer):
         ]
 
     def to_representation(self, instance):
-        user = self.context.get('request').user
         request = self.context.get('request')
         return ShowRecipeAddedSerializer(
-            Recipe.objects.annotate_user_flags(user).get(
-                pk=instance.recipe.pk
-            ),
+            instance.recipe,
             context={'request': request}
         ).data
