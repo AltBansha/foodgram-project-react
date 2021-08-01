@@ -12,6 +12,3 @@ urlpatterns = [
          name='subscriptions'),
     path('', include('djoser.urls')),
 ]
-
-#     path('users/set_password/', ChangePasswordView.as_view(),
-#          name='set_password'),

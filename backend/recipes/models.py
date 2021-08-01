@@ -1,8 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-from django.db.models import Exists, OuterRef, Value
-from django.db.models.query import QuerySet
 
 User = get_user_model()
 
@@ -52,33 +50,6 @@ class Ingredient(models.Model):
         return f'{self.name} {self.measurement_unit}'
 
 
-class RecipeQueryset(QuerySet):
-    def annotate_user_flags(self, user):
-        if user.is_anonymous:
-            return self.annotate(
-                is_favorited=Value(False,
-                                   output_field=models.BooleanField()),
-                is_in_shopping_cart=Value(
-                    False,
-                    output_field=models.BooleanField()
-                )
-            )
-        return self.annotate(
-            is_favorited=Exists(
-                Favorite.objects.filter(
-                    user=user,
-                    recipe_id=OuterRef('pk')
-                )
-            ),
-            is_in_shopping_cart=Exists(
-                ShoppingList.objects.filter(
-                    user=user,
-                    recipe_id=OuterRef('pk')
-                )
-            )
-        )
-
-
 class Recipe(models.Model):
     tags = models.ManyToManyField(
         Tag,
@@ -118,7 +89,6 @@ class Recipe(models.Model):
         verbose_name='Время приготовления в минутах',
         help_text='Укажите Время приготовления в минутах',
     )
-    objects = models.Manager.from_queryset(RecipeQueryset)()
 
     class Meta:
         ordering = ['-pub_date']

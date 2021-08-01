@@ -1,16 +1,14 @@
 from django.contrib.auth import get_user_model
 from django.db import transaction
+from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
-
 from users.serializers import UserSerializer
-from drf_extra_fields.fields import Base64ImageField
+
 from .models import (Favorite, Ingredient, IngredientAmount, Recipe,
                      ShoppingList, Tag)
 
 User = get_user_model()
-
-BASE_URL = 'http://127.0.0.1'
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -91,6 +89,16 @@ class AddIngredientAmountSerializer(serializers.ModelSerializer):
         model = IngredientAmount
         fields = ('id', 'amount')
 
+    def validate(self, data):
+        ingredients = self.initial_data.get('ingredients')
+        for ingredient_item in ingredients:
+            if int(ingredient_item['amount']) <= 0:
+                raise serializers.ValidationError({
+                    'ingredients': ('Убедитесь, что значение количества '
+                                    'ингредиента больше 0.')
+                })
+        return data
+
 
 class ShowRecipeAddedSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()
@@ -160,19 +168,9 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         instance.tags.set(tags_data)
         return instance
 
-    def validate(self, data):
-        ingredients = self.initial_data.get('ingredients')
-        for ingredient_item in ingredients:
-            if int(ingredient_item['amount']) <= 0:
-                raise serializers.ValidationError({
-                    'ingredients': ('Убедитесь, что значение количества '
-                                    'ингредиента больше 0.')
-                })
-        return data
-
     def validate_cooking_time(self, data):
         cooking_time = self.initial_data.get('cooking_time')
-        if int(cooking_time) <= 0:
+        if cooking_time <= 0:
             raise serializers.ValidationError(
                 'Убедитесь, что время '
                 'приготовления больше 0.'

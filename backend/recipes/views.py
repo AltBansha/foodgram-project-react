@@ -41,6 +41,7 @@ class RecipeViewSet(ModelViewSet):
     filter_backends = [DjangoFilterBackend, ]
     filter_class = RecipeFilter
     pagination_class = PageNumberPaginatorModified
+    permission_classes = [AllowAny, ]
 
     def get_queryset(self):
         return Recipe.objects.annotate_user_flags(self.request.user)
@@ -50,7 +51,6 @@ class RecipeViewSet(ModelViewSet):
             return IsAuthenticated(),
         if self.action in ['destroy', 'update', 'partial_update']:
             return IsAuthorOrReadOnly() and IsAdminOrSuperUser(),
-        return AllowAny(),
 
     def get_serializer_class(self):
         if self.request.method in ('POST', 'PUT', 'PATCH'):
