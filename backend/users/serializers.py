@@ -23,16 +23,11 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
     def get_is_subscribed(self, obj):
-        user = self.context.get('request').user
-        if user.is_anonymous:
+        request = self.context.get('request')
+        if request is None or request.user.is_anonymous:
             return False
-        return obj.following.exists()
-    # def get_is_subscribed(self, obj):
-    #     request = self.context.get('request')
-    #     if request is None or request.user.is_anonymous:
-    #         return False
-    #     user = request.user
-    #     return Follow.objects.filter(author=obj, user=user).exists()
+        user = request.user
+        return Follow.objects.filter(author=obj, user=user).exists()
 
 
 class ShowFollowersSerializer(serializers.ModelSerializer):
@@ -44,7 +39,6 @@ class ShowFollowersSerializer(serializers.ModelSerializer):
         model = User
         fields = ('email', 'id', 'username', 'first_name', 'last_name',
                   'is_subscribed', 'recipes', 'recipes_count')
-        # read_only_fields = fields
 
     def get_is_subscribed(self, user):
         current_user = self.context.get('current_user')
@@ -56,10 +50,6 @@ class ShowFollowersSerializer(serializers.ModelSerializer):
         if Follow.objects.filter(user=user, author=current_user).exists():
             return True
         return False
-        # request = self.context.get('request')
-        # if request is None or request.user.is_anonymous:
-        #     return False
-        # return obj.following.filter(author=request.user).exists()
 
     def get_recipes(self, obj):
         from recipes.serializers import ShowRecipeAddedSerializer
