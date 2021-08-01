@@ -38,13 +38,11 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class RecipeViewSet(ModelViewSet):
+    queryset = Recipe.objects.all()
     filter_backends = [DjangoFilterBackend, ]
     filter_class = RecipeFilter
     pagination_class = PageNumberPaginatorModified
     permission_classes = [AdminOrAuthorOrReadOnly, ]
-
-    def get_queryset(self):
-        return Recipe.objects.annotate_user_flags(self.request.user)
 
     # def get_permissions(self):
     #     if self.action == 'create':
