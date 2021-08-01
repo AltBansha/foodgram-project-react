@@ -22,17 +22,17 @@ class UserSerializer(serializers.ModelSerializer):
             'last_name',
         )
 
-    # def get_is_subscribed(self, obj):
-    #     user = self.context.get('request').user
-    #     if user.is_anonymous:
-    #         return False
-    #     return user.following.filter(author=obj).exists()
     def get_is_subscribed(self, obj):
-        request = self.context.get('request')
-        if request is None or request.user.is_anonymous:
+        user = self.context.get('request').user
+        if user.is_anonymous:
             return False
-        user = request.user
-        return Follow.objects.filter(author=obj, user=user).exists()
+        return obj.following.exists()
+    # def get_is_subscribed(self, obj):
+    #     request = self.context.get('request')
+    #     if request is None or request.user.is_anonymous:
+    #         return False
+    #     user = request.user
+    #     return Follow.objects.filter(author=obj, user=user).exists()
 
 
 class ShowFollowersSerializer(serializers.ModelSerializer):
@@ -46,20 +46,20 @@ class ShowFollowersSerializer(serializers.ModelSerializer):
                   'is_subscribed', 'recipes', 'recipes_count')
         # read_only_fields = fields
 
-    def get_is_subscribed(self, user):
-        current_user = self.context.get('current_user')
-        other_user = user.following.all()
-        if user.is_anonymous:
-            return False
-        if other_user.count() == 0:
-            return False
-        if Follow.objects.filter(user=user, author=current_user).exists():
-            return True
-        return False
-        # request = self.context.get('request')
-        # if request is None or request.user.is_anonymous:
+    def get_is_subscribed(self, obj):
+        # current_user = self.context.get('current_user')
+        # other_user = user.following.all()
+        # if user.is_anonymous:
         #     return False
-        # return obj.following.filter(author=request.user).exists()
+        # if other_user.count() == 0:
+        #     return False
+        # if Follow.objects.filter(user=user, author=current_user).exists():
+        #     return True
+        # return False
+        request = self.context.get('request')
+        if request is None or request.user.is_anonymous:
+            return False
+        return obj.following.filter(author=request.user).exists()
 
     def get_recipes(self, obj):
         from recipes.serializers import ShowRecipeAddedSerializer
