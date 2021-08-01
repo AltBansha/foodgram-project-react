@@ -44,13 +44,6 @@ class RecipeViewSet(ModelViewSet):
     pagination_class = PageNumberPaginatorModified
     permission_classes = [AdminOrAuthorOrReadOnly, ]
 
-    # def get_permissions(self):
-    #     if self.action == 'create':
-    #         return IsAuthenticated(),
-    #     if self.action in ['destroy', 'update', 'partial_update']:
-    #         return IsAuthorOrReadOnly() and IsAdminOrSuperUser(),
-    #     return AllowAny(),
-
     def get_serializer_class(self):
         if self.request.method in ('POST', 'PUT', 'PATCH'):
             return RecipeCreateSerializer
