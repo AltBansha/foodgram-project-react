@@ -9,9 +9,7 @@ User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
-    is_subscribed = serializers.SerializerMethodField(
-        method_name='get_is_subscribed'
-    )
+    is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -40,7 +38,7 @@ class ShowFollowersSerializer(serializers.ModelSerializer):
         model = User
         fields = ('email', 'id', 'username', 'first_name', 'last_name',
                   'is_subscribed', 'recipes', 'recipes_count')
-        read_only_fields = fields
+        # read_only_fields = fields
 
     def get_is_subscribed(self, user):
         current_user = self.context.get('current_user')
@@ -81,7 +79,7 @@ class FollowSerializer(serializers.ModelSerializer):
             UniqueTogetherValidator(
                 queryset=Follow.objects.all(),
                 fields=['user', 'author'],
-                # message=('Вы уже подписались на этого автора.')
+                message=('Вы уже подписались на этого автора.')
             )
         ]
 
