@@ -89,16 +89,6 @@ class AddIngredientAmountSerializer(serializers.ModelSerializer):
         model = IngredientAmount
         fields = ('id', 'amount')
 
-    def validate(self, data):
-        ingredients = self.initial_data.get('ingredients')
-        for ingredient_item in ingredients:
-            if int(ingredient_item['amount']) <= 0:
-                raise serializers.ValidationError({
-                    'ingredients': ('Убедитесь, что значение количества '
-                                    'ингредиента больше 0.')
-                })
-        return data
-
 
 class ShowRecipeAddedSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()
@@ -167,6 +157,16 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         instance.save()
         instance.tags.set(tags_data)
         return instance
+
+    def validate(self, data):
+        ingredients = self.initial_data.get('ingredients')
+        for ingredient_item in ingredients:
+            if int(ingredient_item['amount']) <= 0:
+                raise serializers.ValidationError({
+                    'ingredients': ('Убедитесь, что значение количества '
+                                    'ингредиента больше 0.')
+                })
+        return data
 
     def validate_cooking_time(self, data):
         cooking_time = self.initial_data.get('cooking_time')
