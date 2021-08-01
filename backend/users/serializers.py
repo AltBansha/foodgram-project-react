@@ -29,7 +29,7 @@ class UserSerializer(serializers.ModelSerializer):
         if user.is_anonymous:
             return False
         # return user.following.filter(author=obj).exists()
-        return user.following.all()
+        return user.following.exists()
 
 
 class ShowFollowersSerializer(serializers.ModelSerializer):
